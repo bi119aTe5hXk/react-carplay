@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { ExtraConfig } from "../../../main/Globals";
+import { ExtraConfig, Stream } from "../../../main/Globals";
 import { io } from 'socket.io-client'
-import { Stream } from "socketmost/dist/modules/Messages";
 
 interface CarplayStore {
   settings: null | ExtraConfig,
@@ -56,7 +55,6 @@ socket.on('reverse', (reverse) => {
   console.log("reverse data", reverse)
   useStatusStore.setState(() => ({reverse: reverse}))
 })
-
 
 
 

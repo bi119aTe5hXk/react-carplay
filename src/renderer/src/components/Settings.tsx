@@ -235,7 +235,7 @@ function Settings({ settings }: SettingsProps) {
           <Box>
             <Button onClick={() => saveSettings(activeSettings)}>SAVE</Button>
             <Button onClick={() => setOpenBindings(true)}>BINDINGS</Button>
-            <Button onClick={() => setOpenCan(true)}>CANBUS</Button>
+            <Button disabled title="CANBUS is disabled in the Windows-only build" onClick={() => setOpenCan(true)}>CANBUS</Button>
           </Box>
         </Grid>
         <Dialog

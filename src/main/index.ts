@@ -1,15 +1,11 @@
 import { app, shell, BrowserWindow, session, systemPreferences, IpcMainEvent, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { DEFAULT_CONFIG } from 'node-carplay/node'
+import { DEFAULT_CONFIG } from 'node-carplay/web'
 import { Socket } from './Socket'
 import * as fs from 'fs';
 
-// comment below line to allow running on non linux devices
-import {Canbus} from "./Canbus"
-
 import { ExtraConfig, KeyBindings } from "./Globals";
-// import CarplayNode, {DEFAULT_CONFIG, CarplayMessage} from "node-carplay/node";
 
 let mainWindow: BrowserWindow
 const appPath: string = app.getPath('userData')
@@ -42,11 +38,6 @@ const EXTRA_CONFIG: ExtraConfig = {
   canConfig: {}
 }
 
-// comment below line to allow running on non linux devices
-let canbus: null | Canbus
-
-let socket: null | Socket
-
 fs.exists(configPath, (exists) => {
     if(exists) {
       config = JSON.parse(fs.readFileSync(configPath).toString())
@@ -64,19 +55,14 @@ fs.exists(configPath, (exists) => {
       config = JSON.parse(fs.readFileSync(configPath).toString())
       console.log("config created and read")
     }
-    socket = new Socket(config!, saveSettings)
-    // comment below if statement to allow running on non linux devices
-    if(config!.canbus) {
-      console.log("Configuring can", config!.canConfig)
-      canbus = new Canbus('can0',  socket, config!.canConfig)
-      canbus.on('lights', (data) => {
-        console.log('lights', data)
-      })
-      canbus.on('reverse', (data) => {
-        mainWindow?.webContents?.send('reverse', data)
-      })
+    config = {
+      ...config!,
+      canbus: false,
+      piMost: false,
+      most: {}
     }
-
+    fs.writeFileSync(configPath, JSON.stringify(config))
+    new Socket(config!, saveSettings)
 })
 
 const handleSettingsReq = (_: IpcMainEvent ) => {
@@ -160,7 +146,9 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
   app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-  systemPreferences.askForMediaAccess("microphone")
+  if (process.platform === 'darwin') {
+    systemPreferences.askForMediaAccess("microphone")
+  }
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     details.responseHeaders!['Cross-Origin-Opener-Policy'] = ['same-origin'];
     details.responseHeaders!['Cross-Origin-Embedder-Policy'] = ['require-corp'];
@@ -198,7 +186,7 @@ app.whenReady().then(() => {
 
   ipcMain.on('getSettings', handleSettingsReq)
 
-  ipcMain.on('saveSettings', saveSettings)
+  ipcMain.on('saveSettings', (_event, settings: ExtraConfig) => saveSettings(settings))
 
   // ipcMain.on('startStream', startMostStream)
 
@@ -221,8 +209,14 @@ app.whenReady().then(() => {
 })
 
 const saveSettings = (settings: ExtraConfig) => {
-  console.log("saving settings", settings)
-  fs.writeFileSync(configPath, JSON.stringify(settings))
+  const windowsSettings = {
+    ...settings,
+    canbus: false,
+    piMost: false,
+    most: {}
+  }
+  console.log("saving settings", windowsSettings)
+  fs.writeFileSync(configPath, JSON.stringify(windowsSettings))
   app.relaunch()
   app.exit()
 }

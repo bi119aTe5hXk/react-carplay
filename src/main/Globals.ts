@@ -1,5 +1,12 @@
-import { Stream } from "socketmost/dist/modules/Messages";
-import { DongleConfig } from 'node-carplay/node'
+import { DongleConfig } from 'node-carplay/web'
+
+export type Stream = {
+  fBlockID: number
+  instanceID: number
+  sinkNr: number
+  sourceAddrHigh: number
+  sourceAddrLow: number
+}
 
 export type Most = {
   stream?: Stream
