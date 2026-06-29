@@ -13,38 +13,52 @@ carplay application.
  - Configurable key bindings
  - Ability to choose microphone device and camera device
 
-## Installation
-The easiest method is to install via the setup-pi script, this handles usb permissions and also creates and autostart script
-to launch the app on start up.
+## Installation on Debian/GNOME
+
+This branch is intended to run as a manually launched desktop app. The setup script handles USB permissions,
+installs a locally built AppImage into `~/Applications`, and creates a GNOME launcher. It does not create an
+autostart entry.
 
 `git clone https://github.com/rhysmorgan134/react-carplay.git`
 
 `cd react-carplay`
 
-`./setup-pi.sh`
+Build the Linux x64 AppImage:
+
+`npm install`
+
+`npm run build:linux`
+
+Install the AppImage and desktop launcher:
+
+`npm run setup:linux`
+
+After setup, unplug and replug the CPC200-CCPA dongle, then launch `React CarPlay` from GNOME.
 
 ## Manual installation
-
-Download the latest app image from the link below, choose 64bit or armv7l for 32bit
-
-`https://github.com/rhysmorgan134/react-carplay/releases`
 
 Create the required udev rules
 
 `FILE=/etc/udev/rules.d/52-nodecarplay.rules`
-`echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1314\", ATTR{idProduct}==\"152*\", MODE=\"0660\", GROUP=\"plugdev\"" | sudo tee $FILE`
 
-Make the app image executable - navigate to the downloaded file eg:
+```
+echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="1314", ATTR{idProduct}=="1520", MODE="0660", GROUP="plugdev", TAG+="uaccess"' | sudo tee $FILE
+echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="1314", ATTR{idProduct}=="1521", MODE="0660", GROUP="plugdev", TAG+="uaccess"' | sudo tee -a $FILE
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
 
-`cd /home/pi/Downloads`
+Make the app image executable - navigate to the built file eg:
 
-Then run the below command, replacing the file name with the one downloaded
+`cd dist`
 
-`chmod +x react-carplay-4.0.0-arm64.AppImage`
+Then run the below command, replacing the file name with the one built
+
+`chmod +x react-carplay-4.0.5-x64.AppImage`
 
 Then run the AppImage
 
-`./react-carplay-4.0.0-arm64.AppImage`
+`./react-carplay-4.0.5-x64.AppImage`
 
 ## Canbus configuration
 
